@@ -21,7 +21,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/10 shadow-sm">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+              <img src="logo.png" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-sky-600">Đăng ký kinh doanh</span>
           </div>
