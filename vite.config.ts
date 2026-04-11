@@ -37,4 +37,6 @@ export default defineConfig({
     sourcemap: false,
     minify: 'esbuild',
   },
+  base: '/dang-ky-kinh-doanh/',
+
 })
