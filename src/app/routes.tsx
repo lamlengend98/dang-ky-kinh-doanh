@@ -37,4 +37,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  basename: '/dang-ky-kinh-doanh/',
+});
