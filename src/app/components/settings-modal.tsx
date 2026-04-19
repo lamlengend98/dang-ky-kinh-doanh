@@ -115,7 +115,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormField label="Họ và tên">
-                    <Input name="hoTen" value={info.hoTen} onChange={handleChange} placeholder="Nguyễn Văn A" />
+                    <Input name="hoTen" value={info.hoTen} onChange={(e) => { e.target.value = e.target.value.toUpperCase(); handleChange(e); }} placeholder="NGUYỄN VĂN A" />
                   </FormField>
                   <FormField label="Sinh ngày">
                     <Input type="date" name="ngaySinh" value={info.ngaySinh} onChange={handleChange} />
@@ -206,11 +206,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <button
                 onClick={handleSave}
                 disabled={saved}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all ${
-                  saved
+                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all ${saved
                     ? 'bg-green-500 text-white'
                     : 'bg-primary text-primary-foreground hover:opacity-90'
-                }`}
+                  }`}
               >
                 {saved ? (
                   <>

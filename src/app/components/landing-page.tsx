@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Building2, Store, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Building2, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export function LandingPage() {
@@ -13,22 +13,22 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <h1 className="text-2xl md:text-5xl font-bold text-foreground mb-4 md:mb-6">
             Đăng ký kinh doanh
             <span className="text-primary"> nhanh chóng</span> và{' '}
             <span className="text-primary">dễ dàng</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            Hệ thống hỗ trợ đăng ký hộ kinh doanh và doanh nghiệp một thành viên trực tuyến
+          <p className="text-base md:text-xl text-muted-foreground mb-6 md:mb-8">
+            Hệ thống hỗ trợ đăng ký doanh nghiệp trực tuyến nhanh chóng
           </p>
-          
+
           {/* Features */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
             {features.map((feature, index) => (
@@ -48,21 +48,21 @@ export function LandingPage() {
 
         {/* Registration Options */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Hộ kinh doanh */}
+          {/* Doanh nghiệp hai thành viên trở lên */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
           >
-            <Link to="/ho-kinh-doanh">
+            <Link to="/doanh-nghiep-2-tv">
               <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-transparent hover:border-primary">
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center mb-6">
-                  <Store className="w-8 h-8 text-white" />
+                  <Users className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-4">Hộ kinh doanh</h2>
+                <h2 className="text-2xl font-semibold mb-4">DN hai thành viên trở lên</h2>
                 <p className="text-muted-foreground mb-6">
-                  Đăng ký cho cá nhân hoặc hộ gia đình kinh doanh nhỏ lẻ, không cần thành lập pháp nhân
+                  Đăng ký công ty TNHH có từ 2 đến 50 thành viên góp vốn, có tư cách pháp nhân
                 </p>
                 <div className="flex items-center gap-2 text-primary">
                   <span>Bắt đầu đăng ký</span>
@@ -84,7 +84,7 @@ export function LandingPage() {
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-6">
                   <Building2 className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-4">Doanh nghiệp một thành viên</h2>
+                <h2 className="text-2xl font-semibold mb-4">DN một thành viên</h2>
                 <p className="text-muted-foreground mb-6">
                   Đăng ký công ty TNHH một thành viên, có tư cách pháp nhân độc lập
                 </p>

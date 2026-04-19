@@ -17,7 +17,7 @@ export function FormSection({ title, children, icon }: FormSectionProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-white rounded-xl p-6 shadow-sm border border-border"
+      className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-border"
     >
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
         {icon && <div className="text-primary">{icon}</div>}

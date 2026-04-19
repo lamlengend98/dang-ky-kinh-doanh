@@ -38,6 +38,7 @@ export function DoanhNghiepForm() {
   const [mainIndustry, setMainIndustry] = useState<string>('');
 
   const [submitted, setSubmitted] = useState(false);
+
   const { openSettings, isConfigured } = useSettings();
 
 
@@ -53,6 +54,36 @@ export function DoanhNghiepForm() {
     setSelectedIndustries(selected);
   };
 
+  const fillSampleData = () => {
+    setFormData({
+      tenCongTy: 'CÔNG TY TNHH MTV CÔNG NGHỆ ABC',
+      diaChi_chiTiet: '123 Đường Láng',
+      diaChi_xaPhuong: 'Phường Láng',
+      diaChi_tinhThanh: 'Thành phố Hà Nội',
+      website: 'https://abc.com.vn',
+      soDienThoaiCT: '02431234567',
+      email_ct: 'contact@abc.com.vn',
+      von: '1000000000',
+      hoTen: 'NGUYỄN VĂN A',
+      gioiTinh: 'Nam',
+      ngaySinh: '1990-01-01',
+      soDinhDanh: '012345678901',
+      thuongTru_chiTiet: 'Số 1 Phú Diễn',
+      thuongTru_xaPhuong: 'Phường Phú Diễn',
+      thuongTru_tinhThanh: 'Thành phố Hà Nội',
+      soDienThoai: '0912345678',
+      email: 'a.nguyen@gmail.com',
+    });
+
+    const sampleIndustry = industryOptions.find(opt => opt.classes?.some(c => c.code === '6201'))
+      ?.classes?.find(c => c.code === '6201');
+
+    if (sampleIndustry) {
+      setSelectedIndustries([sampleIndustry]);
+      setMainIndustry('6201');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -64,11 +95,13 @@ export function DoanhNghiepForm() {
     setSubmitted(true);
 
     try {
+      // @ts-ignore - Vite specific env variable
+      const basePath = (import.meta as any).env.BASE_URL || '/';
       const templates = [
-        { name: "01. Giấy đề nghị.docx", path: "/assets/1 thành viên/01. Giấy đề nghị.docx" },
-        { name: "02. Điều lệ.docx", path: "/assets/1 thành viên/02. Điều lệ.docx" },
-        { name: "03. ủy quyền.docx", path: "/assets/1 thành viên/03. ủy quyền.docx" },
-        { name: "04. Danh sách hưởng lợi.docx", path: "/assets/1 thành viên/04. DSCSH hưởng lợi.docx" },
+        { name: "01. Giấy đề nghị.docx", path: `${basePath}assets/1 thành viên/01. Giấy đề nghị.docx` },
+        { name: "02. Điều lệ.docx", path: `${basePath}assets/1 thành viên/02. Điều lệ.docx` },
+        { name: "03. ủy quyền.docx", path: `${basePath}assets/1 thành viên/03. ủy quyền.docx` },
+        { name: "04. Danh sách hưởng lợi.docx", path: `${basePath}assets/1 thành viên/04. DSCSH hưởng lợi.docx` },
       ];
 
       const mainZip = new PizZip();
@@ -78,7 +111,7 @@ export function DoanhNghiepForm() {
       const uqInfo = storedUQ ? JSON.parse(storedUQ) : {};
 
       const data = {
-        ten_cong_ty: formData.tenCongTy || '',
+        ten_cong_ty: (formData.tenCongTy || '').toUpperCase(),
         website: formData.website || '',
         so_dien_thoai_ct: formData.soDienThoaiCT || '',
         email_ct: formData.email_ct || '',
@@ -94,7 +127,7 @@ export function DoanhNghiepForm() {
         thang_lam_don: String(new Date().getMonth() + 1).padStart(2, '0'),
         nam_lam_don: String(new Date().getFullYear()),
         ngay_ky: `ngày ${String(new Date().getDate()).padStart(2, '0')} tháng ${String(new Date().getMonth() + 1).padStart(2, '0')} năm ${String(new Date().getFullYear())}`,
-        ho_ten: formData.hoTen || '',
+        ho_ten: (formData.hoTen || '').toUpperCase(),
         gioi_tinh: (formData.gioiTinh && formData.gioiTinh.charAt(0).toUpperCase() + formData.gioiTinh.slice(1)) || '',
         ngay_sinh: formatDate(formData.ngaySinh) || '',
         so_dinh_danh: formData.soDinhDanh || '',
@@ -194,7 +227,7 @@ export function DoanhNghiepForm() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold mb-2">Hồ sơ đăng ký doanh nghiệp một thành viên</h1>
+          <h1 className="text-xl md:text-3xl font-bold mb-2">Hồ sơ đăng ký doanh nghiệp một thành viên</h1>
           <p className="text-muted-foreground">
             Vui lòng điền thông tin bên dưới nếu có.
           </p>
@@ -206,10 +239,10 @@ export function DoanhNghiepForm() {
             <FormField label="Tên công ty">
               <Input
                 name="tenCongTy"
-                placeholder="Công ty TNHH MTV..."
+                placeholder="CÔNG TY TNHH MTV..."
                 value={formData.tenCongTy}
-                onChange={handleChange}
-               
+                onChange={(e) => { e.target.value = e.target.value.toUpperCase(); handleChange(e); }}
+
               />
             </FormField>
 
@@ -239,7 +272,7 @@ export function DoanhNghiepForm() {
                   placeholder="0912345678"
                   value={formData.soDienThoaiCT}
                   onChange={handleChange}
-                 
+
                 />
               </FormField>
 
@@ -250,7 +283,7 @@ export function DoanhNghiepForm() {
                   placeholder="email@example.com"
                   value={formData.email_ct}
                   onChange={handleChange}
-                 
+
                 />
               </FormField>
             </div>
@@ -286,10 +319,10 @@ export function DoanhNghiepForm() {
               <FormField label="Họ và tên">
                 <Input
                   name="hoTen"
-                  placeholder="Nguyễn Văn A"
+                  placeholder="NGUYỄN VĂN A"
                   value={formData.hoTen}
-                  onChange={handleChange}
-                 
+                  onChange={(e) => { e.target.value = e.target.value.toUpperCase(); handleChange(e); }}
+
                 />
               </FormField>
 
@@ -304,7 +337,7 @@ export function DoanhNghiepForm() {
                     { value: 'Nữ', label: 'Nữ' },
                     { value: 'Khác', label: 'Khác' },
                   ]}
-                 
+
                 />
               </FormField>
             </div>
@@ -316,7 +349,7 @@ export function DoanhNghiepForm() {
                   name="ngaySinh"
                   value={formData.ngaySinh}
                   onChange={handleChange}
-                 
+
                 />
               </FormField>
 
@@ -329,7 +362,7 @@ export function DoanhNghiepForm() {
                   placeholder="001234567890"
                   value={formData.soDinhDanh}
                   onChange={handleChange}
-                 
+
                 />
               </FormField>
 
@@ -340,7 +373,7 @@ export function DoanhNghiepForm() {
                   placeholder="0912345678"
                   value={formData.soDienThoai}
                   onChange={handleChange}
-                 
+
                 />
               </FormField>
 
@@ -351,7 +384,7 @@ export function DoanhNghiepForm() {
                   placeholder="email@example.com"
                   value={formData.email}
                   onChange={handleChange}
-                 
+
                 />
               </FormField>
             </div>
@@ -361,7 +394,7 @@ export function DoanhNghiepForm() {
               prefix="thuongTru"
               formData={formData}
               onChange={handleChange}
-             
+
             />
           </FormSection>
 
@@ -370,42 +403,53 @@ export function DoanhNghiepForm() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex justify-end gap-4"
+            className="flex flex-col items-center gap-6"
           >
-            <button
-              type="button"
-              className="px-6 py-3 rounded-lg border border-border hover:bg-accent transition-colors"
-              onClick={() => {
-                setFormData({
-                  tenCongTy: '',
-                  diaChi_chiTiet: '', diaChi_xaPhuong: '', diaChi_tinhThanh: '',
-                  website: '', soDienThoaiCT: '', email_ct: '',
-                  von: '', hoTen: '', gioiTinh: '',
-                  ngaySinh: '', soDinhDanh: '',
-                  thuongTru_chiTiet: '', thuongTru_xaPhuong: '', thuongTru_tinhThanh: '',
-                  soDienThoai: '', email: '',
-                });
-                setSelectedIndustries([]);
-                setMainIndustry('');
-              }}
-            >
-              Đặt lại
-            </button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="submit"
-                  onClick={handleSubmit}
-                  className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity shadow-md flex items-center gap-2"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  Tạo hồ sơ
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top" sideOffset={8}>
-                <p>Hệ thống sẽ điền dữ liệu vào bộ hồ sơ (Giấy đề nghị, Điều lệ...) và tải về dưới dạng ZIP.</p>
-              </TooltipContent>
-            </Tooltip>
+
+
+            <div className="flex justify-end gap-4 w-full">
+              <button
+                type="button"
+                className="px-6 py-3 rounded-lg border border-primary text-primary hover:bg-primary/5 transition-colors"
+                onClick={fillSampleData}
+              >
+                Nhập dữ liệu mẫu
+              </button>
+              <button
+                type="button"
+                className="px-6 py-3 rounded-lg border border-border hover:bg-accent transition-colors"
+                onClick={() => {
+                  setFormData({
+                    tenCongTy: '',
+                    diaChi_chiTiet: '', diaChi_xaPhuong: '', diaChi_tinhThanh: '',
+                    website: '', soDienThoaiCT: '', email_ct: '',
+                    von: '', hoTen: '', gioiTinh: '',
+                    ngaySinh: '', soDinhDanh: '',
+                    thuongTru_chiTiet: '', thuongTru_xaPhuong: '', thuongTru_tinhThanh: '',
+                    soDienThoai: '', email: '',
+                  });
+                  setSelectedIndustries([]);
+                  setMainIndustry('');
+                }}
+              >
+                Đặt lại
+              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity shadow-md flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    Tạo hồ sơ
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={8}>
+                  <p>Hệ thống sẽ điền dữ liệu vào bộ hồ sơ (Giấy đề nghị, Điều lệ...) và tải về dưới dạng ZIP.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </motion.div>
         </form>
       </div>
