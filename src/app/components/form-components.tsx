@@ -60,24 +60,13 @@ export function FormField({ label, required, children, hint, tooltip }: FormFiel
   );
 }
 
-interface InputProps {
-  type?: string;
-  placeholder?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  name?: string;
-}
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export function Input({ type = 'text', placeholder, value, onChange, required, name }: InputProps) {
+export function Input({ className, ...props }: InputProps) {
   return (
     <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      name={name}
-      className="w-full px-4 py-2.5 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+      {...props}
+      className={`w-full px-4 py-2.5 bg-input-background rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all ${className || ''}`}
     />
   );
 }

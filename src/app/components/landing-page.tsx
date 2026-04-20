@@ -47,7 +47,31 @@ export function LandingPage() {
         </motion.div>
 
         {/* Registration Options */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Công ty Cổ phần */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
+            <Link to="/cong-ty-co-phan">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-transparent hover:border-primary h-full flex flex-col">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mb-6">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-xl font-semibold mb-4">CTY Cổ phần</h2>
+                <p className="text-muted-foreground mb-6 flex-grow">
+                  Đăng ký thành lập công ty cổ phần có ít nhất 03 cổ đông sáng lập, không giới hạn tối đa
+                </p>
+                <div className="flex items-center gap-2 text-primary mt-auto">
+                  <span>Bắt đầu đăng ký</span>
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
           {/* Doanh nghiệp hai thành viên trở lên */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -56,15 +80,15 @@ export function LandingPage() {
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
           >
             <Link to="/doanh-nghiep-2-tv">
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-transparent hover:border-primary">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-transparent hover:border-primary h-full flex flex-col">
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center mb-6">
                   <Users className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-4">DN hai thành viên trở lên</h2>
-                <p className="text-muted-foreground mb-6">
-                  Đăng ký công ty TNHH có từ 2 đến 50 thành viên góp vốn, có tư cách pháp nhân
+                <h2 className="text-xl font-semibold mb-4">CTY TNHH 2 TV</h2>
+                <p className="text-muted-foreground mb-6 flex-grow">
+                  Đăng ký công ty TNHH có từ 02 đến 50 thành viên góp vốn, có tư cách pháp nhân
                 </p>
-                <div className="flex items-center gap-2 text-primary">
+                <div className="flex items-center gap-2 text-primary mt-auto">
                   <span>Bắt đầu đăng ký</span>
                   <ArrowRight className="w-5 h-5" />
                 </div>
@@ -80,15 +104,15 @@ export function LandingPage() {
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
           >
             <Link to="/doanh-nghiep">
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-transparent hover:border-primary">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-8 border-2 border-transparent hover:border-primary h-full flex flex-col">
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-6">
                   <Building2 className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-semibold mb-4">DN một thành viên</h2>
-                <p className="text-muted-foreground mb-6">
+                <h2 className="text-xl font-semibold mb-4">CTY TNHH 1 TV</h2>
+                <p className="text-muted-foreground mb-6 flex-grow">
                   Đăng ký công ty TNHH một thành viên, có tư cách pháp nhân độc lập
                 </p>
-                <div className="flex items-center gap-2 text-primary">
+                <div className="flex items-center gap-2 text-primary mt-auto">
                   <span>Bắt đầu đăng ký</span>
                   <ArrowRight className="w-5 h-5" />
                 </div>

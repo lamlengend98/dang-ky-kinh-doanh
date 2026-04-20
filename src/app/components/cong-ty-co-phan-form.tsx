@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Building2, CheckCircle2, Plus, Trash2, Users } from 'lucide-react';
+import { Building2, CheckCircle2, Plus, Trash2, Users } from 'lucide-react';
 import { FormSection, FormField, Input, Select, CurrencyInput, MultiIndustrySelect, AddressSelector } from './form-components';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { IndustryOption, industryOptions } from '../data/industries';
@@ -10,24 +10,23 @@ import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
 import { useSettings } from '../context/SettingsContext';
 
-interface Member {
+interface Shareholder {
   id: string;
   hoTen: string;
   gioiTinh: string;
   ngaySinh: string;
   soDinhDanh: string;
-  thuongTru_chiTiet: string;
-  thuongTru_xaPhuong: string;
-  thuongTru_tinhThanh: string;
   contact_chiTiet: string;
   contact_xaPhuong: string;
   contact_tinhThanh: string;
   soDienThoai: string;
   email: string;
   vonGop: string;
+  tyLeGop: string;
+  soCoPhan: string;
 }
 
-export function DoanhNghiep2TVForm() {
+export function CongTyCoPhanForm() {
   const [formData, setFormData] = useState({
     // Thông tin doanh nghiệp
     tenCongTy: '',
@@ -38,24 +37,25 @@ export function DoanhNghiep2TVForm() {
     soDienThoaiCT: '',
     email_ct: '',
     von: '',
+    tongSoCoPhan: '',
+    menhGia: '10000',
   });
 
-  const [members, setMembers] = useState<Member[]>([
+  const [shareholders, setShareholders] = useState<Shareholder[]>([
     {
       id: crypto.randomUUID(),
       hoTen: '',
       gioiTinh: '',
       ngaySinh: '',
       soDinhDanh: '',
-      thuongTru_chiTiet: '',
-      thuongTru_xaPhuong: '',
-      thuongTru_tinhThanh: '',
       contact_chiTiet: '',
       contact_xaPhuong: '',
       contact_tinhThanh: '',
       soDienThoai: '',
       email: '',
       vonGop: '',
+      tyLeGop: '',
+      soCoPhan: '',
     }
   ]);
 
@@ -73,88 +73,214 @@ export function DoanhNghiep2TVForm() {
     });
   };
 
-  const handleMemberChange = (id: string, field: keyof Member, value: string) => {
-    setMembers(members.map(m => m.id === id ? { ...m, [field]: value } : m));
+  const handleCompanyVonChange = (val: string) => {
+    const vonNum = parseInt(val) || 0;
+    const sharesNum = parseInt(formData.tongSoCoPhan) || 0;
+
+    let newMenhGia = formData.menhGia;
+    if (sharesNum > 0) {
+      newMenhGia = Math.floor(vonNum / sharesNum).toString();
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      von: val,
+      menhGia: newMenhGia
+    }));
+
+    // Update shareholders vonGop based on their existing percentages
+    setShareholders(prev => prev.map(s => {
+      const percent = parseFloat(s.tyLeGop) || 0;
+      if (percent > 0) {
+        const newVon = Math.round((percent / 100) * vonNum).toString();
+        // Keep shares count the same if possible, or recalculate based on new von and menhGia
+        const mGia = parseInt(newMenhGia) || 10000;
+        const newShares = Math.floor(parseInt(newVon) / mGia).toString();
+        return { ...s, vonGop: newVon, soCoPhan: newShares };
+      }
+      return s;
+    }));
   };
 
-  const addMember = () => {
-    setMembers([...members, {
+  const handleCompanySharesChange = (val: string) => {
+    const sharesNum = parseInt(val) || 0;
+    const vonNum = parseInt(formData.von) || 0;
+
+    let newMenhGia = formData.menhGia;
+    if (sharesNum > 0) {
+      newMenhGia = Math.floor(vonNum / sharesNum).toString();
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      tongSoCoPhan: val,
+      menhGia: newMenhGia
+    }));
+
+    // Update shareholders soCoPhan based on their existing percentages of total shares
+    setShareholders(prev => prev.map(s => {
+      const percent = parseFloat(s.tyLeGop) || 0;
+      if (percent > 0) {
+        const newShares = Math.floor((percent / 100) * sharesNum).toString();
+        // vonGop stays same as it's linked to total von
+        return { ...s, soCoPhan: newShares };
+      }
+      return s;
+    }));
+  };
+
+  const handleCompanyMenhGiaChange = (val: string) => {
+    const menhGiaNum = parseInt(val) || 0;
+    const vonNum = parseInt(formData.von) || 0;
+
+    if (menhGiaNum > 0) {
+      const soCoPhan = Math.floor(vonNum / menhGiaNum).toString();
+      setFormData(prev => ({
+        ...prev,
+        menhGia: val,
+        tongSoCoPhan: soCoPhan
+      }));
+
+      // Update shareholders shares based on new menhGia
+      setShareholders(prev => prev.map(s => {
+        const vGop = parseInt(s.vonGop) || 0;
+        const newShares = Math.floor(vGop / menhGiaNum).toString();
+        return { ...s, soCoPhan: newShares };
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, menhGia: val }));
+    }
+  };
+
+  const handleShareholderChange = (id: string, field: keyof Shareholder, value: string) => {
+    setShareholders(shareholders.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
+  const handleShareholderShareChange = (id: string, type: 'von' | 'percent' | 'shares', value: string) => {
+    const totalVon = parseInt(formData.von) || 0;
+
+    setShareholders(prev => prev.map(s => {
+      if (s.id !== id) return s;
+
+      let newVon = s.vonGop;
+      let newPercent = s.tyLeGop;
+      let newShares = s.soCoPhan;
+
+      if (type === 'von') {
+        newVon = value;
+        const valNum = parseInt(value) || 0;
+        newPercent = totalVon > 0 ? ((valNum / totalVon) * 100).toFixed(2) : '0';
+        newShares = Math.floor(valNum / (parseInt(formData.menhGia) || 10000)).toString();
+      } else if (type === 'percent') {
+        newPercent = value;
+        const valNum = parseFloat(value) || 0;
+        const calculatedVon = Math.round((valNum / 100) * totalVon);
+        newVon = calculatedVon.toString();
+        newShares = Math.floor(calculatedVon / (parseInt(formData.menhGia) || 10000)).toString();
+      } else if (type === 'shares') {
+        newShares = value;
+        const valNum = parseInt(value) || 0;
+        const calculatedVon = valNum * (parseInt(formData.menhGia) || 10000);
+        newVon = calculatedVon.toString();
+        newPercent = totalVon > 0 ? ((calculatedVon / totalVon) * 100).toFixed(2) : '0';
+      }
+
+      return { ...s, vonGop: newVon, tyLeGop: newPercent, soCoPhan: newShares };
+    }));
+  };
+
+  const addShareholder = () => {
+    setShareholders([...shareholders, {
       id: crypto.randomUUID(),
       hoTen: '',
       gioiTinh: '',
       ngaySinh: '',
       soDinhDanh: '',
-      thuongTru_chiTiet: '',
-      thuongTru_xaPhuong: '',
-      thuongTru_tinhThanh: '',
       contact_chiTiet: '',
       contact_xaPhuong: '',
       contact_tinhThanh: '',
       soDienThoai: '',
       email: '',
       vonGop: '',
+      tyLeGop: '',
+      soCoPhan: '',
     }]);
   };
 
-  const removeMember = (id: string) => {
-    if (members.length > 1) {
-      setMembers(members.filter(m => m.id !== id));
+  const removeShareholder = (id: string) => {
+    if (shareholders.length > 1) {
+      setShareholders(shareholders.filter(s => s.id !== id));
     }
   };
 
   const fillSampleData = () => {
     setFormData({
-      tenCongTy: 'CÔNG TY TNHH ĐẦU TƯ ABC VIỆT NAM',
-      diaChi_chiTiet: '123 Đường Láng',
-      diaChi_xaPhuong: 'Phường Láng',
+      tenCongTy: 'CÔNG TY CỔ PHẦN CÔNG NGHỆ XYZ',
+      diaChi_chiTiet: '456 Đường Giải Phóng',
+      diaChi_xaPhuong: 'Phường Phương Liệt',
       diaChi_tinhThanh: 'Thành phố Hà Nội',
-      website: 'https://abc-invest.vn',
-      soDienThoaiCT: '02438889999',
-      email_ct: 'office@abc-invest.vn',
-      von: '2000000000',
+      website: 'https://xyz-tech.vn',
+      soDienThoaiCT: '02431234567',
+      email_ct: 'contact@xyz-tech.vn',
+      von: '5000000000',
+      tongSoCoPhan: '500000',
+      menhGia: '10000',
     });
 
-    setMembers([
+    setShareholders([
       {
         id: crypto.randomUUID(),
-        hoTen: 'NGUYỄN VĂN A',
+        hoTen: 'PHẠM VĂN C',
         gioiTinh: 'Nam',
-        ngaySinh: '1985-05-15',
-        soDinhDanh: '001085001234',
-        thuongTru_chiTiet: 'Số 1 Phú Diễn',
-        thuongTru_xaPhuong: 'Phường Phú Diễn',
-        thuongTru_tinhThanh: 'Thành phố Hà Nội',
-        contact_chiTiet: 'Số 1 Phú Diễn',
-        contact_xaPhuong: 'Phường Phú Diễn',
+        ngaySinh: '1980-01-01',
+        soDinhDanh: '001080001234',
+        contact_chiTiet: 'Số 10 Lý Thường Kiệt',
+        contact_xaPhuong: 'Phường Phan Chu Trinh',
         contact_tinhThanh: 'Thành phố Hà Nội',
-        soDienThoai: '0988666777',
-        email: 'a.nguyen@abc.com',
-        vonGop: '1600000000',
+        soDienThoai: '0901234567',
+        email: 'c.pham@xyz.com',
+        vonGop: '2500000000',
+        tyLeGop: '50',
+        soCoPhan: '250000',
       },
       {
         id: crypto.randomUUID(),
-        hoTen: 'TRẦN THỊ B',
+        hoTen: 'LÊ THỊ D',
         gioiTinh: 'Nữ',
-        ngaySinh: '1990-10-20',
-        soDinhDanh: '001190005678',
-        thuongTru_chiTiet: '22 Láng',
-        thuongTru_xaPhuong: 'Phường Láng',
-        thuongTru_tinhThanh: 'Thành phố Hà Nội',
-        contact_chiTiet: '22 Láng',
-        contact_xaPhuong: 'Phường Láng',
+        ngaySinh: '1988-12-12',
+        soDinhDanh: '001188005678',
+        contact_chiTiet: '20 Hàng Bài',
+        contact_xaPhuong: 'Phường Hàng Bài',
         contact_tinhThanh: 'Thành phố Hà Nội',
-        soDienThoai: '0912345555',
-        email: 'b.tran@abc.com',
-        vonGop: '400000000', // 400M/2B = 20%
+        soDienThoai: '0912348888',
+        email: 'd.le@xyz.com',
+        vonGop: '1500000000',
+        tyLeGop: '30',
+        soCoPhan: '150000',
+      },
+      {
+        id: crypto.randomUUID(),
+        hoTen: 'HOÀNG VĂN E',
+        gioiTinh: 'Nam',
+        ngaySinh: '1992-06-15',
+        soDinhDanh: '001092009012',
+        contact_chiTiet: '50 Trần Hưng Đạo',
+        contact_xaPhuong: 'Phường Trần Hưng Đạo',
+        contact_tinhThanh: 'Thành phố Hà Nội',
+        soDienThoai: '0988777999',
+        email: 'e.hoang@xyz.com',
+        vonGop: '1000000000',
+        tyLeGop: '20',
+        soCoPhan: '100000',
       }
     ]);
 
-    const sampleIndustry = industryOptions.find(opt => opt.classes?.some(c => c.code === '6201'))
-      ?.classes?.find(c => c.code === '6201');
+    const sampleIndustry = industryOptions.find(opt => opt.classes?.some(c => c.code === '6202'))
+      ?.classes?.find(c => c.code === '6202');
 
     if (sampleIndustry) {
       setSelectedIndustries([sampleIndustry]);
-      setMainIndustry('6201');
+      setMainIndustry('6202');
     }
   };
 
@@ -171,20 +297,18 @@ export function DoanhNghiep2TVForm() {
     try {
       // @ts-ignore - Vite specific env variable
       const basePath = (import.meta as any).env.BASE_URL || '/';
-      // NOTE: Template paths for 2 members should be updated once available
+      // NOTE: Template paths for Co Phan are placeholders for now
       const templates = [
-        { name: "01. Điều lệ.docx", path: `${basePath}assets/2 thành viên/01. Điều lệ.docx` },
-        { name: "02. Giấy đề nghị.docx", path: `${basePath}assets/2 thành viên/02. Giấy đề nghị.docx` },
-        { name: "03. Danh sách thành viên.docx", path: `${basePath}assets/2 thành viên/03. Danh sách thành viên.docx` },
-        { name: "04. Giấy ủy quyền.docx", path: `${basePath}assets/2 thành viên/04. Giấy ủy quyền.docx` },
-        { name: "05. DSCSH hưởng lợi.docx", path: `${basePath}assets/2 thành viên/05. DSCSH hưởng lợi.docx` },
+        { name: "01. Điều lệ.docx", path: `${basePath}assets/cổ phần/01. Điều lệ.docx` },
+        { name: "02. Giấy đề nghị.docx", path: `${basePath}assets/cổ phần/02. Giấy đề nghị.docx` },
+        { name: "03. Danh sách cổ đông.docx", path: `${basePath}assets/cổ phần/03. Danh sách CĐSL.docx` },
+        { name: "04. Giấy ủy quyền.docx", path: `${basePath}assets/cổ phần/04. Giấy ủy quyền.docx` },
+        { name: "05. DSCSH hưởng lợi.docx", path: `${basePath}assets/cổ phần/05. DSCSH hưởng lợi.docx` },
       ];
 
       const mainZip = new PizZip();
       const storedUQ = localStorage.getItem('authorized_person_info');
       const uqInfo = storedUQ ? JSON.parse(storedUQ) : {};
-
-      const totalVonGopValue = members.reduce((acc, m) => acc + (parseInt(m.vonGop) || 0), 0);
 
       const data = {
         ten_cong_ty: (formData.tenCongTy || '').toUpperCase(),
@@ -194,6 +318,8 @@ export function DoanhNghiep2TVForm() {
         von: formData.von || '',
         von_so: formatCurrency(formData.von),
         von_chu: convertNumberToVietnameseWords(formData.von),
+        tong_co_phan: formatCurrency(formData.tongSoCoPhan),
+        gia_co_phan: formatCurrency((parseInt(formData.von) / (parseInt(formData.tongSoCoPhan) || 1)).toString()),
         tru_so_chi_tiet: formData.diaChi_chiTiet || '',
         tru_so_xa_phuong: formData.diaChi_xaPhuong || '',
         tinh_thanh_tru_so: formData.diaChi_tinhThanh || '',
@@ -203,19 +329,18 @@ export function DoanhNghiep2TVForm() {
         thang_lam_don: String(new Date().getMonth() + 1).padStart(2, '0'),
         nam_lam_don: String(new Date().getFullYear()),
         ngay_ky: `ngày ${String(new Date().getDate()).padStart(2, '0')} tháng ${String(new Date().getMonth() + 1).padStart(2, '0')} năm ${String(new Date().getFullYear())}`,
+        ngay_thanh_lap: `ngày ${String(new Date().getDate()).padStart(2, '0')} tháng ${String(new Date().getMonth() + 1).padStart(2, '0')} năm ${String(new Date().getFullYear())}`,
 
+        ho_ten: (shareholders[0].hoTen || '').toUpperCase(),
+        gioi_tinh: (shareholders[0].gioiTinh && shareholders[0].gioiTinh.charAt(0).toUpperCase() + shareholders[0].gioiTinh.slice(1)) || '',
+        ngay_sinh: formatDate(shareholders[0].ngaySinh) || '',
+        so_dinh_danh: shareholders[0].soDinhDanh || '',
+        dia_chi_chi_tiet: shareholders[0].contact_chiTiet || '',
+        dia_chi_xa_phuong: shareholders[0].contact_xaPhuong || '',
+        dia_chi_tinh_thanh: shareholders[0].contact_tinhThanh || '',
+        so_dien_thoai: shareholders[0].soDienThoai || '',
+        email: shareholders[0].email || '',
 
-        ho_ten: (members[0].hoTen || '').toUpperCase(),
-        gioi_tinh: (members[0].gioiTinh && members[0].gioiTinh.charAt(0).toUpperCase() + members[0].gioiTinh.slice(1)) || '',
-        ngay_sinh: formatDate(members[0].ngaySinh) || '',
-        so_dinh_danh: members[0].soDinhDanh || '',
-        dia_chi_chi_tiet: members[0].thuongTru_chiTiet || '',
-        dia_chi_xa_phuong: members[0].thuongTru_xaPhuong || '',
-        dia_chi_tinh_thanh: members[0].thuongTru_tinhThanh || '',
-        so_dien_thoai: members[0].soDienThoai || '',
-        email: members[0].email || '',
-
-        // Authorized person info
         ho_ten_duoc_uy_quyen: uqInfo.hoTen || '',
         ngay_sinh_duoc_uy_quyen: formatDate(uqInfo.ngaySinh) || '',
         gioi_tinh_duoc_uy_quyen: uqInfo.gioiTinh || '',
@@ -226,17 +351,19 @@ export function DoanhNghiep2TVForm() {
         sdt_duoc_uy_quyen: uqInfo.sdt || '',
         email_duoc_uy_quyen: uqInfo.email || '',
 
-        thanh_vien: members.map((m, idx) => {
-          const tiLeGop = formData.von ? (parseInt(m.vonGop) / parseInt(formData.von)) * 100 : 0;
+        thanh_vien: shareholders.map((s, idx) => {
+          const tiLeGop = formData.von ? (parseInt(s.vonGop) / parseInt(formData.von)) * 100 : 0;
           return {
             stt: idx + 1,
-            ho_ten: m.hoTen.toUpperCase(),
-            gioi_tinh: m.gioiTinh,
-            ngay_sinh: formatDate(m.ngaySinh),
-            so_dinh_danh: m.soDinhDanh,
-            dia_chi: `${m.thuongTru_chiTiet}, ${m.thuongTru_xaPhuong}, ${m.thuongTru_tinhThanh}`,
-            von_so: formatCurrency(m.vonGop),
+            ho_ten: s.hoTen.toUpperCase(),
+            gioi_tinh: s.gioiTinh,
+            ngay_sinh: formatDate(s.ngaySinh),
+            so_dinh_danh: s.soDinhDanh,
+            dia_chi: `${s.contact_chiTiet}, ${s.contact_xaPhuong}, ${s.contact_tinhThanh}`,
+            von_so: formatCurrency(s.vonGop),
             ty_le: String(tiLeGop).includes('.') ? tiLeGop.toFixed(2) : tiLeGop.toString(),
+            so_co_phan: formatCurrency(Math.round(tiLeGop / 100 * (parseInt(formData.tongSoCoPhan) || 0)).toString()),
+            gia_co_phan: formatCurrency((parseInt(formData.von) / (parseInt(formData.tongSoCoPhan) || 1)).toString()),
             quyen_chi_phoi: tiLeGop < 25
               ? '\n-Bổ nhiệm, miễn nhiệm hoặc bãi nhiệm đa số hoặc tất cả thành viên hội đồng quản trị, giám đốc hoặc tổng giám đốc của doanh nghiệp\n-Sửa đổi, bổ sung điều lệ của doanh nghiệp\n-Thay đổi cơ cấu tổ chức quản lý công ty\n-Tổ chức lại, giải thể công ty'
               : '',
@@ -251,20 +378,29 @@ export function DoanhNghiep2TVForm() {
             nganh_chinh: industry?.code === mainIndustry ? "X" : "",
           };
         }),
+
+        ds_chu_ky: (() => {
+          const names = shareholders.map(s => s.hoTen.toUpperCase());
+          const rows = [];
+          for (let i = 0; i < names.length; i += 2) {
+            rows.push({
+              ho_ten_1: names[i] || '',
+              ho_ten_2: names[i + 1] || '',
+            });
+          }
+          return rows;
+        })(),
       };
 
       for (const template of templates) {
         try {
-          // Normalize paths to avoid Mac NFD vs NFC issues
           const URI = encodeURI(template.path.normalize('NFC'));
           let res = await fetch(URI);
 
           if (!res.ok) {
-            // Fallback to literal path just in case
             res = await fetch(template.path);
           }
           if (!res.ok) {
-            // Fallback to NFD
             res = await fetch(encodeURI(template.path.normalize('NFD')));
           }
           if (!res.ok) {
@@ -295,16 +431,20 @@ export function DoanhNghiep2TVForm() {
         } catch (e: any) {
           console.error(`Lỗi render template ${template.name}:`, e);
           if (e.properties && e.properties.errors) {
-            console.error('Lỗi chi tiết từ docxtemplater:', e.properties.errors);
+            console.error("Chi tiết lỗi template cho", template.name, ":", e.properties.errors);
+            e.properties.errors.forEach((err: any) => {
+              console.error("Thông báo:", err.message);
+              console.error("Vị trí/Thuộc tính:", err.properties);
+            });
           }
         }
       }
 
       if (Object.keys(mainZip.files).length > 0) {
         const finalBlob = mainZip.generate({ type: "blob", mimeType: "application/zip" });
-        saveAs(finalBlob, `Ho_so_2TV_${formData.tenCongTy.replace(/\s+/g, '_') || 'doanh_nghiep'}.zip`);
+        saveAs(finalBlob, `Ho_so_CP_${formData.tenCongTy.replace(/\s+/g, '_') || 'doanh_nghiep'}.zip`);
       } else {
-        alert("Hiện tại chưa có bộ template cho DN 2 thành viên trong hệ thống. Vui lòng liên hệ admin.");
+        alert("Hiện tại chưa có bộ template cho Công ty Cổ phần trong hệ thống. Vui lòng liên hệ admin.");
       }
 
     } catch (error) {
@@ -327,7 +467,7 @@ export function DoanhNghiep2TVForm() {
           </div>
           <h2 className="text-2xl font-semibold mb-4">Tạo hồ sơ thành công!</h2>
           <p className="text-muted-foreground">
-            Hồ sơ đăng ký CTY TNHH 2 TV của bạn đã được tạo.
+            Hồ sơ đăng ký CTY Cổ phần của bạn đã được tạo.
           </p>
         </motion.div>
       </div>
@@ -338,9 +478,9 @@ export function DoanhNghiep2TVForm() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-xl md:text-3xl font-bold mb-2 text-primary">Hồ sơ đăng ký CTY TNHH 2 TV</h1>
+          <h1 className="text-xl md:text-3xl font-bold mb-2 text-primary">Hồ sơ đăng ký CTY Cổ phần</h1>
           <p className="text-muted-foreground italic">
-            Dành cho loại hình Công ty TNHH Hai thành viên trở lên.
+            Dành cho loại hình Công ty Cổ phần.
           </p>
         </motion.div>
 
@@ -348,7 +488,7 @@ export function DoanhNghiep2TVForm() {
           {/* Thông tin doanh nghiệp */}
           <FormSection title="Thông tin công ty" icon={<Building2 className="w-5 h-5" />}>
             <FormField label="Tên công ty">
-              <Input name="tenCongTy" placeholder="CÔNG TY TNHH..." value={formData.tenCongTy} onChange={(e) => { e.target.value = e.target.value.toUpperCase(); handleChange(e); }} />
+              <Input name="tenCongTy" placeholder="CÔNG TY CỔ PHẦN..." value={formData.tenCongTy} onChange={(e) => { e.target.value = e.target.value.toUpperCase(); handleChange(e); }} />
             </FormField>
 
             <AddressSelector label="Trụ sở chính" prefix="diaChi" formData={formData} onChange={handleChange} />
@@ -372,33 +512,41 @@ export function DoanhNghiep2TVForm() {
               />
             </FormField>
 
-            <FormField label="Vốn điều lệ">
-              <CurrencyInput placeholder="Vốn điều lệ" value={formData.von} onChange={(val) => setFormData({ ...formData, von: val })} />
-              {formData.von && <p className="mt-2 text-sm text-primary italic">Bằng chữ: {convertNumberToVietnameseWords(formData.von)}</p>}
-            </FormField>
+            <div className="grid md:grid-cols-3 gap-5">
+              <FormField label="Vốn điều lệ (VNĐ)">
+                <CurrencyInput placeholder="Vốn điều lệ" value={formData.von} onChange={handleCompanyVonChange} />
+                {formData.von && <p className="mt-2 text-sm text-primary italic">Bằng chữ: {convertNumberToVietnameseWords(formData.von)}</p>}
+              </FormField>
+              <FormField label="Tổng số cổ phần">
+                <Input type="number" name="tongSoCoPhan" placeholder="Số cổ phần" value={formData.tongSoCoPhan} onChange={(e) => handleCompanySharesChange(e.target.value)} />
+              </FormField>
+              <FormField label="Mệnh giá (VNĐ/CP)">
+                <CurrencyInput placeholder="Mệnh giá" value={formData.menhGia} onChange={handleCompanyMenhGiaChange} />
+              </FormField>
+            </div>
           </FormSection>
 
-          {/* Thông tin thành viên */}
+          {/* Thông tin cổ đông */}
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 md:w-6 md:h-6 text-primary flex-shrink-0" />
-                <h2 className="text-lg md:text-2xl font-bold">Danh sách thành viên góp vốn</h2>
+                <h2 className="text-lg md:text-2xl font-bold">Danh sách cổ đông sáng lập</h2>
               </div>
               <button
                 type="button"
-                onClick={addMember}
+                onClick={addShareholder}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm text-sm md:text-base"
               >
                 <Plus className="w-4 h-4" />
-                Thêm thành viên
+                Thêm cổ đông
               </button>
             </div>
 
             <AnimatePresence mode="popLayout">
-              {members.map((member, index) => (
+              {shareholders.map((shareholder, index) => (
                 <motion.div
-                  key={member.id}
+                  key={shareholder.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
@@ -408,12 +556,12 @@ export function DoanhNghiep2TVForm() {
 
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
-                      Thành viên #{index + 1}
+                      Cổ đông #{index + 1}
                     </h3>
-                    {members.length > 1 && (
+                    {shareholders.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeMember(member.id)}
+                        onClick={() => removeShareholder(shareholder.id)}
                         className="p-2 text-destructive hover:bg-destructive/10 rounded-full transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -423,56 +571,60 @@ export function DoanhNghiep2TVForm() {
 
                   <div className="grid md:grid-cols-2 gap-5 mb-5">
                     <FormField label="Họ và tên">
-                      <Input value={member.hoTen} onChange={(e) => handleMemberChange(member.id, 'hoTen', e.target.value.toUpperCase())} placeholder="NGUYỄN VĂN A" />
+                      <Input value={shareholder.hoTen} onChange={(e) => handleShareholderChange(shareholder.id, 'hoTen', e.target.value.toUpperCase())} placeholder="NGUYỄN VĂN A" />
                     </FormField>
                     <FormField label="Giới tính">
                       <Select
-                        value={member.gioiTinh}
-                        onChange={(e) => handleMemberChange(member.id, 'gioiTinh', e.target.value)}
+                        value={shareholder.gioiTinh}
+                        onChange={(e) => handleShareholderChange(shareholder.id, 'gioiTinh', e.target.value)}
                         options={[{ value: 'Nam', label: 'Nam' }, { value: 'Nữ', label: 'Nữ' }]}
                         placeholder="Chọn giới tính"
                       />
                     </FormField>
                     <FormField label="Ngày sinh">
-                      <Input type="date" value={member.ngaySinh} onChange={(e) => handleMemberChange(member.id, 'ngaySinh', e.target.value)} />
+                      <Input type="date" value={shareholder.ngaySinh} onChange={(e) => handleShareholderChange(shareholder.id, 'ngaySinh', e.target.value)} />
                     </FormField>
                     <FormField label="Số định danh (CCCD)">
-                      <Input value={member.soDinhDanh} onChange={(e) => handleMemberChange(member.id, 'soDinhDanh', e.target.value)} placeholder="0..." />
+                      <Input value={shareholder.soDinhDanh} onChange={(e) => handleShareholderChange(shareholder.id, 'soDinhDanh', e.target.value)} placeholder="0..." />
                     </FormField>
                   </div>
 
                   <div className="space-y-5">
                     <AddressSelector
-                      label="Địa chỉ thường trú"
-                      prefix="thuongTru"
-                      formData={member}
-                      onChange={(e: any) => handleMemberChange(member.id, e.target.name as keyof Member, e.target.value)}
-                    />
-                    <AddressSelector
                       label="Địa chỉ liên lạc"
                       prefix="contact"
-                      formData={member}
-                      onChange={(e: any) => handleMemberChange(member.id, e.target.name as keyof Member, e.target.value)}
+                      formData={shareholder}
+                      onChange={(e: any) => handleShareholderChange(shareholder.id, e.target.name as keyof Shareholder, e.target.value)}
                     />
                   </div>
 
                   <div className="mt-6 pt-6 border-t border-dashed border-border">
-                    <FormField label="Vốn góp">
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                        <div className="flex-1">
-                          <CurrencyInput
-                            value={member.vonGop}
-                            onChange={(val) => handleMemberChange(member.id, 'vonGop', val)}
-                            placeholder="Nhập số vốn góp"
-                          />
-                        </div>
-                        <div className="whitespace-nowrap bg-accent/50 px-4 py-2.5 rounded-lg border border-border text-center sm:text-left">
-                          Tỷ lệ: <span className="font-bold text-primary">
-                            {formData.von ? ((parseInt(member.vonGop) / parseInt(formData.von)) * 100).toFixed(2) : 0}%
-                          </span>
-                        </div>
-                      </div>
-                    </FormField>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <FormField label="Số vốn góp (VNĐ)">
+                        <CurrencyInput
+                          value={shareholder.vonGop}
+                          onChange={(val) => handleShareholderShareChange(shareholder.id, 'von', val)}
+                          placeholder="Nhập số vốn góp"
+                        />
+                      </FormField>
+                      <FormField label="Tỷ lệ %">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={shareholder.tyLeGop}
+                          onChange={(e) => handleShareholderShareChange(shareholder.id, 'percent', e.target.value)}
+                          placeholder="%"
+                        />
+                      </FormField>
+                      <FormField label="Số cổ phần">
+                        <Input
+                          type="number"
+                          value={shareholder.soCoPhan}
+                          onChange={(e) => handleShareholderShareChange(shareholder.id, 'shares', e.target.value)}
+                          placeholder="Số cổ phần"
+                        />
+                      </FormField>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -481,7 +633,6 @@ export function DoanhNghiep2TVForm() {
 
           {/* Footer UI */}
           <div className="flex flex-col items-center gap-8 pt-8">
-
             <div className="flex justify-end gap-4 w-full">
               {import.meta.env.DEV && (
                 <button
@@ -501,13 +652,15 @@ export function DoanhNghiep2TVForm() {
                     diaChi_chiTiet: '', diaChi_xaPhuong: '', diaChi_tinhThanh: '',
                     website: '', soDienThoaiCT: '', email_ct: '',
                     von: '',
+                    tongSoCoPhan: '',
+                    menhGia: '10000',
                   });
-                  setMembers([{
+                  setShareholders([{
                     id: crypto.randomUUID(),
                     hoTen: '', gioiTinh: '', ngaySinh: '', soDinhDanh: '',
-                    thuongTru_chiTiet: '', thuongTru_xaPhuong: '', thuongTru_tinhThanh: '',
                     contact_chiTiet: '', contact_xaPhuong: '', contact_tinhThanh: '',
                     soDienThoai: '', email: '', vonGop: '',
+                    tyLeGop: '', soCoPhan: ''
                   }]);
                   setSelectedIndustries([]);
                   setMainIndustry('');
@@ -522,11 +675,11 @@ export function DoanhNghiep2TVForm() {
                     className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-all shadow-lg flex items-center gap-3 font-semibold text-lg"
                   >
                     <CheckCircle2 className="w-6 h-6" />
-                    Tạo hồ sơ CTY TNHH 2 TV
+                    Tạo hồ sơ CTY Cổ phần
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={8}>
-                  <p>Hệ thống sẽ tổng hợp danh sách thành viên và điền vào các mẫu hồ sơ.</p>
+                  <p>Hệ thống sẽ tổng hợp danh sách cổ đông và điền vào các mẫu hồ sơ.</p>
                 </TooltipContent>
               </Tooltip>
             </div>

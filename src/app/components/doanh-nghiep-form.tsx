@@ -211,7 +211,7 @@ export function DoanhNghiepForm() {
           </div>
           <h2 className="text-2xl font-semibold mb-4">Tạo hồ sơ thành công!</h2>
           <p className="text-muted-foreground">
-            Hồ sơ đăng ký doanh nghiệp một thành viên của bạn đã được tạo. Bạn có thể kiểm tra tệp tải về.
+            Hồ sơ đăng ký CTY TNHH 1 TV của bạn đã được tạo. Bạn có thể kiểm tra tệp tải về.
           </p>
         </motion.div>
       </div>
@@ -227,7 +227,7 @@ export function DoanhNghiepForm() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-xl md:text-3xl font-bold mb-2">Hồ sơ đăng ký doanh nghiệp một thành viên</h1>
+          <h1 className="text-xl md:text-3xl font-bold mb-2">Hồ sơ đăng ký CTY TNHH 1 TV</h1>
           <p className="text-muted-foreground">
             Vui lòng điền thông tin bên dưới nếu có.
           </p>
@@ -408,13 +408,15 @@ export function DoanhNghiepForm() {
 
 
             <div className="flex justify-end gap-4 w-full">
-              <button
-                type="button"
-                className="px-6 py-3 rounded-lg border border-primary text-primary hover:bg-primary/5 transition-colors"
-                onClick={fillSampleData}
-              >
-                Nhập dữ liệu mẫu
-              </button>
+              {import.meta.env.DEV && (
+                <button
+                  type="button"
+                  className="px-6 py-3 rounded-lg border border-primary text-primary hover:bg-primary/5 transition-colors"
+                  onClick={fillSampleData}
+                >
+                  Nhập dữ liệu mẫu
+                </button>
+              )}
               <button
                 type="button"
                 className="px-6 py-3 rounded-lg border border-border hover:bg-accent transition-colors"

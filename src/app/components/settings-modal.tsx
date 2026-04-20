@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, UserCheck, ShieldCheck, MapPin, Phone, Mail } from 'lucide-react';
+import { X, Save, UserCheck, ShieldCheck, MapPin, Phone, Mail, Wand2 } from 'lucide-react';
 import { FormField, Input, Select, AddressSelector } from './form-components';
 
 interface AuthorizedPersonInfo {
@@ -67,6 +67,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setSaved(false);
       onClose();
     }, 1500);
+  };
+
+  const handleLoadSampleData = () => {
+    setInfo({
+      hoTen: 'NGUYỄN VĂN MẪU',
+      ngaySinh: '1990-01-01',
+      gioiTinh: 'Nam',
+      soDinhDanh: '001090123456',
+      contact_chiTiet: 'Số 1, Phố Tràng Tiền',
+      contact_xaPhuong: 'Phường Giảng Võ',
+      contact_tinhThanh: 'Thành phố Hà Nội',
+      sdt: '0912345678',
+      email: 'nguyenvanmau@example.com',
+    });
   };
 
   return (
@@ -196,33 +210,44 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-border bg-gray-50 flex items-center justify-end gap-3">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saved}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all ${saved
+            <div className="px-6 py-4 border-t border-border bg-gray-50 flex items-center justify-between gap-3">
+              {import.meta.env.DEV && (
+                <button
+                  onClick={handleLoadSampleData}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  Nhập dữ liệu mẫu
+                </button>
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saved}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all ${saved
                     ? 'bg-green-500 text-white'
                     : 'bg-primary text-primary-foreground hover:opacity-90'
-                  }`}
-              >
-                {saved ? (
-                  <>
-                    <UserCheck className="w-4 h-4" />
-                    Đã lưu thành công
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Lưu thông tin
-                  </>
-                )}
-              </button>
+                    }`}
+                >
+                  {saved ? (
+                    <>
+                      <UserCheck className="w-4 h-4" />
+                      Đã lưu thành công
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Lưu thông tin
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

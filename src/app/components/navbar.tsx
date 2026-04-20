@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import { Home, Settings, Menu, X, Users, Building2, ChevronDown, FileText } from 'lucide-react';
+import { Home, Settings, Menu, X, Users, Building2, ChevronDown, FileText, FileType } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { SettingsModal } from './settings-modal';
@@ -16,11 +16,11 @@ export function Navbar() {
   const location = useLocation();
   const { isSettingsOpen, openSettings, closeSettings } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const mobileNavItems = [
-    { path: '/', label: 'Trang chủ', icon: Home },
-    { path: '/doanh-nghiep', label: 'Hồ sơ DN 1 thành viên', icon: Building2 },
-    { path: '/doanh-nghiep-2-tv', label: 'Hồ sơ DN 2 thành viên', icon: Users },
+    { path: '/', label: 'Trang chủ', icon: Home, external: false },
+    { path: '/doanh-nghiep', label: 'Hồ sơ CTY TNHH 1 TV', icon: Building2, external: false },
+    { path: '/doanh-nghiep-2-tv', label: 'Hồ sơ CTY TNHH 2 TV', icon: Users, external: false },
+    { path: '/cong-ty-co-phan', label: 'Hồ sơ CTY Cổ phần', icon: Users, external: false },
   ];
 
   return (
@@ -40,8 +40,8 @@ export function Navbar() {
             <Link
               to="/"
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-sm font-medium ${location.pathname === '/'
-                  ? 'bg-accent text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                ? 'bg-accent text-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                 }`}
             >
               <Home className="w-4 h-4" />
@@ -51,8 +51,8 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-sm font-medium shadow-sm ${location.pathname !== '/'
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}>
                   <FileText className="w-4 h-4" />
                   Tạo hồ sơ
@@ -63,21 +63,29 @@ export function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link to="/doanh-nghiep" className="cursor-pointer w-full flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-sky-500" />
-                    <span>1 thành viên</span>
+                    <span>CTY TNHH 1 TV</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/doanh-nghiep-2-tv" className="cursor-pointer w-full flex items-center gap-2">
                     <Users className="w-4 h-4 text-blue-500" />
-                    <span>2 thành viên</span>
+                    <span>CTY TNHH 2 TV</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/cong-ty-co-phan" className="cursor-pointer w-full flex items-center gap-2">
+                    <Users className="w-4 h-4 text-indigo-500" />
+                    <span>CTY Cổ phần</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          {/* Right side: settings + mobile hamburger */}
+          {/* Right side: tools + settings + mobile hamburger */}
           <div className="flex items-center gap-2">
+
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -118,7 +126,19 @@ export function Navbar() {
               {mobileNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
-                return (
+                return item.external ? (
+                  <a
+                    key={item.path}
+                    href={item.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-red-600 bg-red-50 hover:bg-red-100"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </a>
+                ) : (
                   <Link
                     key={item.path}
                     to={item.path}
